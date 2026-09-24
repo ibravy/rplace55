@@ -3,700 +3,354 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>r/place Minimal Canvas</title>
+    <title>3D Lamborghini Real Driving Game</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             user-select: none;
-            -webkit-user-select: none;
         }
-
         body, html {
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #121214;
+            background-color: #050508;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: #ffffff;
+            color: #fff;
         }
-
-        /* Canvas Workspace */
-        #canvas-container {
+        #webgl-container {
             width: 100vw;
             height: 100vh;
-            cursor: crosshair;
-            position: relative;
-            background-image: 
-                radial-gradient(circle, #27272a 1px, transparent 1px);
-            background-size: 20px 20px;
+            display: block;
         }
 
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            background-color: #ffffff;
-        }
-
-        /* Credits Badge (Top Left) */
-        .credits-badge {
+        /* UI Overlay */
+        .hud-top {
             position: fixed;
-            top: 16px;
+            top: 20px;
             left: 20px;
-            background: rgba(24, 24, 27, 0.85);
+            z-index: 10;
+            background: rgba(15, 15, 20, 0.85);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 8px 16px;
-            border-radius: 9999px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            z-index: 100;
-            font-size: 13px;
-            font-weight: 600;
-            color: #a1a1aa;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            padding: 12px 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
-
-        .credits-badge span {
-            color: #ffffff;
-            font-weight: 700;
+        .brand-title {
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #ffb703;
+            text-transform: uppercase;
         }
-
-        /* Floating Top Status & Tools Bar */
-        .top-bar {
-            position: fixed;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(24, 24, 27, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 8px 16px;
-            border-radius: 9999px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            z-index: 100;
-        }
-
-        /* Charge Pips & Counter */
-        .charge-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-right: 12px;
-            border-right: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .charge-pips {
-            display: flex;
-            gap: 4px;
-        }
-
-        .pip {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.2s ease;
-        }
-
-        .pip.active {
-            background: #22c55e;
-            box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
-            border-color: #4ade80;
-        }
-
-        .charge-text {
-            font-weight: 700;
-            font-size: 14px;
-            min-width: 30px;
-            letter-spacing: 0.5px;
-        }
-
-        .timer-text {
-            font-size: 12px;
-            color: #a1a1aa;
+        .speedometer {
+            font-size: 32px;
+            font-weight: 800;
+            margin-top: 4px;
             font-variant-numeric: tabular-nums;
-            min-width: 45px;
+        }
+        .speedometer span {
+            font-size: 14px;
+            color: #888;
+            font-weight: 500;
         }
 
-        /* Tools Bar */
-        .tools-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-icon {
-            background: transparent;
-            border: none;
-            color: #a1a1aa;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .btn-icon:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-        }
-
-        .btn-icon.active {
-            background: #ffffff;
-            color: #09090b;
-        }
-
-        /* Floating Bottom Palette Bar */
-        .bottom-bar {
+        /* Controls Instructions */
+        .controls-card {
             position: fixed;
             bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(24, 24, 27, 0.85);
+            left: 20px;
+            z-index: 10;
+            background: rgba(15, 15, 20, 0.85);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 8px 12px;
-            border-radius: 9999px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            z-index: 100;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.6;
+        }
+        .key {
+            background: #222;
+            border: 1px solid #444;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fff;
+            font-weight: bold;
         }
 
-        .palette {
+        /* Paint Swatches */
+        .swatch-bar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10;
             display: flex;
-            align-items: center;
-            gap: 6px;
+            gap: 8px;
+            background: rgba(15, 15, 20, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            border-radius: 999px;
         }
-
-        .color-swatch {
+        .swatch {
             width: 28px;
             height: 28px;
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid transparent;
-            transition: transform 0.15s ease, border-color 0.15s ease;
+            transition: transform 0.2s, border-color 0.2s;
         }
-
-        .color-swatch:hover {
+        .swatch:hover {
             transform: scale(1.15);
         }
-
-        .color-swatch.active {
-            border-color: #ffffff;
+        .swatch.active {
+            border-color: #fff;
             transform: scale(1.2);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-        }
-
-        .custom-color-picker {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 1px dashed rgba(255, 255, 255, 0.4);
-            background: transparent;
-            cursor: pointer;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .custom-color-picker input[type="color"] {
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            width: 50px;
-            height: 50px;
-            cursor: pointer;
-            opacity: 0;
-        }
-
-        /* Floating Controls Bottom-Right */
-        .control-group-br {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 100;
-        }
-
-        .btn-floating {
-            background: rgba(24, 24, 27, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: all 0.15s ease;
-        }
-
-        .btn-floating:hover {
-            background: rgba(39, 39, 42, 0.95);
-            transform: translateY(-2px);
-        }
-
-        /* Hidden File Input */
-        #import-file {
-            display: none;
-        }
-
-        /* Toast Alert */
-        .toast {
-            position: fixed;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-20px);
-            background: #ef4444;
-            color: #ffffff;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.25s ease;
-            z-index: 200;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
         }
     </style>
 </head>
 <body>
 
-    <div id="canvas-container">
-        <canvas id="placeCanvas" width="200" height="200"></canvas>
+    <div id="webgl-container"></div>
+
+    <div class="hud-top">
+        <div class="brand-title">Lamborghini Revuelto</div>
+        <div class="speedometer" id="speedDisplay">0 <span>KM/H</span></div>
     </div>
 
-    <!-- Credits Badge -->
-    <div class="credits-badge">
-        Credits by <span>Ahmet</span>
+    <div class="controls-card">
+        <div><span class="key">W</span> / <span class="key">↑</span> Accelerate</div>
+        <div><span class="key">S</span> / <span class="key">↓</span> Brake / Reverse</div>
+        <div><span class="key">A</span> <span class="key">D</span> / <span class="key">←</span> <span class="key">→</span> Turn</div>
+        <div><span class="key">SPACE</span> Handbrake</div>
     </div>
 
-    <!-- Top Navigation & Charge Info -->
-    <div class="top-bar">
-        <div class="charge-container">
-            <div class="charge-pips" id="chargePips">
-                <div class="pip active"></div>
-                <div class="pip active"></div>
-                <div class="pip active"></div>
-                <div class="pip active"></div>
-                <div class="pip active"></div>
-            </div>
-            <span class="charge-text" id="chargeText">5/5</span>
-            <span class="timer-text" id="timerText">MAX</span>
-        </div>
-
-        <div class="tools-group">
-            <button class="btn-icon active" id="toolDraw" title="Draw Tool">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
-            </button>
-            <button class="btn-icon" id="toolPipette" title="Eyedropper Tool">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2.5a2.121 2.121 0 0 1 3 3L6 17l-4 1 1-4L14.5 2.5z"/></svg>
-            </button>
-            <button class="btn-icon" id="toolPan" title="Pan Mode">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M19 9l3 3-3 3M9 19l3 3 3-3M2 12h20M12 2v20"/></svg>
-            </button>
-        </div>
+    <div class="swatch-bar">
+        <div class="swatch active" style="background: #ffb703;" onclick="setCarColor(0xffb703, this)"></div>
+        <div class="swatch" style="background: #e63946;" onclick="setCarColor(0xe63946, this)"></div>
+        <div class="swatch" style="background: #2a9d8f;" onclick="setCarColor(0x2a9d8f, this)"></div>
+        <div class="swatch" style="background: #111115;" onclick="setCarColor(0x111115, this)"></div>
+        <div class="swatch" style="background: #f1faee;" onclick="setCarColor(0xf1faee, this)"></div>
     </div>
 
-    <!-- Bottom Color Swatches -->
-    <div class="bottom-bar">
-        <div class="palette" id="palette"></div>
-        <div class="custom-color-picker" title="Pick Custom Color">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            <input type="color" id="customColorInput" value="#6366f1">
-        </div>
-    </div>
-
-    <!-- Bottom Right Controls (Import/Export/Zoom) -->
-    <div class="control-group-br">
-        <button class="btn-floating" id="btnExportJson" title="Export JSON Canvas Data">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
-        <button class="btn-floating" id="btnImportJson" title="Import JSON Canvas Data">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </button>
-        <button class="btn-floating" id="btnResetView" title="Reset View & Center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
-        </button>
-    </div>
-
-    <input type="file" id="import-file" accept=".json">
-    <div class="toast" id="toast">No charges remaining! Wait for timer.</div>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // --- CONSTANTS & CONFIG ---
-        const CANVAS_SIZE = 200; // 200x200 pixel grid
-        const MAX_CHARGES = 5;
-        const COOLDOWN_SECONDS = 60; // 1 minute per charge
+        // --- THREE.JS SETUP ---
+        let scene, camera, renderer;
+        let carGroup, carBodyMaterial;
+        let wheels = [];
         
-        const COLOR_PRESETS = [
-            '#6d001a', '#be0039', '#ff4500', '#ffa800', '#ffd635', '#00a368',
-            '#00cc78', '#7eed56', '#00756f', '#009eaa', '#2450a4', '#3690ea',
-            '#51e9f4', '#493ac1', '#6a5cff', '#811e9f', '#b44ac0', '#ff99aa',
-            '#9c6926', '#000000', '#898d90', '#d4d7d9', '#ffffff'
-        ];
+        // Vehicle Physics / Motion
+        let speed = 0;
+        let maxSpeed = 1.2;
+        let acceleration = 0.015;
+        let friction = 0.98;
+        let steeringAngle = 0;
+        let keys = {};
 
-        // --- STATE ---
-        let scale = 3;
-        let panX = 0;
-        let panY = 0;
-        let isDragging = false;
-        let startX = 0, startY = 0;
-        let activeTool = 'draw'; // 'draw', 'pipette', 'pan'
-        let selectedColor = '#ff4500';
+        const speedDisplay = document.getElementById('speedDisplay');
 
-        // Cooldown State
-        let charges = MAX_CHARGES;
-        let lastChargeTime = Date.now();
-
-        // --- DOM ELEMENTS ---
-        const container = document.getElementById('canvas-container');
-        const canvas = document.getElementById('placeCanvas');
-        const ctx = canvas.getContext('2d');
-        const paletteContainer = document.getElementById('palette');
-        const customColorInput = document.getElementById('customColorInput');
-        const chargePips = document.getElementById('chargePips');
-        const chargeText = document.getElementById('chargeText');
-        const timerText = document.getElementById('timerText');
-        const toast = document.getElementById('toast');
-        const importFile = document.getElementById('import-file');
-
-        // Tool buttons
-        const toolDrawBtn = document.getElementById('toolDraw');
-        const toolPipetteBtn = document.getElementById('toolPipette');
-        const toolPanBtn = document.getElementById('toolPan');
-
-        // Setup 2D Canvas Memory
-        const pixelData = new Array(CANVAS_SIZE * CANVAS_SIZE).fill('#ffffff');
-
-        // --- INITIALIZATION ---
         function init() {
-            canvas.width = CANVAS_SIZE;
-            canvas.height = CANVAS_SIZE;
+            const container = document.getElementById('webgl-container');
 
-            loadState();
-            centerCanvas();
-            renderPalette();
-            renderCanvas();
-            startCooldownTimer();
+            // 1. Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0f);
+            scene.fog = new THREE.FogExp2(0x0a0a0f, 0.015);
+
+            // 2. Camera
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // 3. Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // 4. Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            dirLight.position.set(20, 40, 20);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            scene.add(dirLight);
+
+            // 5. Ground / Grid
+            const gridHelper = new THREE.GridHelper(500, 100, 0xffb703, 0x222233);
+            gridHelper.position.y = -0.01;
+            scene.add(gridHelper);
+
+            const groundGeo = new THREE.PlaneGeometry(500, 500);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x07070a, roughness: 0.8 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // 6. Build Lamborghini
+            createLamborghini();
 
             // Event Listeners
-            setupEventListeners();
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('keydown', (e) => keys[e.code] = true);
+            window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+            animate();
         }
 
-        // Center canvas in viewport
-        function centerCanvas() {
-            scale = Math.min(window.innerWidth, window.innerHeight) / (CANVAS_SIZE * 1.5);
-            panX = (window.innerWidth - CANVAS_SIZE * scale) / 2;
-            panY = (window.innerHeight - CANVAS_SIZE * scale) / 2;
-            updateTransform();
-        }
+        // --- PROCEDURAL LAMBORGHINI BUILDER ---
+        function createLamborghini() {
+            carGroup = new THREE.Group();
 
-        function updateTransform() {
-            canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-        }
-
-        // Render Color Swatches
-        function renderPalette() {
-            paletteContainer.innerHTML = '';
-            COLOR_PRESETS.forEach(color => {
-                const swatch = document.createElement('div');
-                swatch.className = `color-swatch ${color === selectedColor ? 'active' : ''}`;
-                swatch.style.backgroundColor = color;
-                swatch.addEventListener('click', () => {
-                    selectedColor = color;
-                    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-                    swatch.classList.add('active');
-                });
-                paletteContainer.appendChild(swatch);
+            // Paint Material (Metallic Supercar Finish)
+            carBodyMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffb703,
+                metalness: 0.8,
+                roughness: 0.2
             });
+
+            const carbonMat = new THREE.MeshStandardMaterial({ color: 0x111113, roughness: 0.5 });
+            const glassMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.1, transparent: true, opacity: 0.8 });
+            const ledMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+            // Base Wedge Body (Aggressive Low Lamborghini Shape)
+            const mainBodyGeo = new THREE.BoxGeometry(1.8, 0.5, 4.2);
+            const mainBody = new THREE.Mesh(mainBodyGeo, carBodyMaterial);
+            mainBody.position.y = 0.45;
+            mainBody.castShadow = true;
+            carGroup.add(mainBody);
+
+            // Roof & Cabin
+            const cabinGeo = new THREE.BoxGeometry(1.3, 0.35, 1.8);
+            const cabin = new THREE.Mesh(cabinGeo, glassMat);
+            cabin.position.set(0, 0.8, -0.2);
+            carGroup.add(cabin);
+
+            // Front Hood Slant
+            const hoodGeo = new THREE.BoxGeometry(1.7, 0.25, 1.5);
+            const hood = new THREE.Mesh(hoodGeo, carBodyMaterial);
+            hood.position.set(0, 0.42, 1.3);
+            hood.rotation.x = -0.12;
+            hood.castShadow = true;
+            carGroup.add(hood);
+
+            // Front Splitter / Air Intakes (Carbon Fiber)
+            const splitterGeo = new THREE.BoxGeometry(1.85, 0.12, 0.6);
+            const splitter = new THREE.Mesh(splitterGeo, carbonMat);
+            splitter.position.set(0, 0.15, 2.0);
+            carGroup.add(splitter);
+
+            // Y-Shaped Headlights (Lamborghini Signature)
+            const hlGeo = new THREE.BoxGeometry(0.4, 0.05, 0.1);
+            const hlLeft = new THREE.Mesh(hlGeo, ledMat);
+            hlLeft.position.set(0.6, 0.45, 2.08);
+            hlLeft.rotation.y = -0.2;
+            carGroup.add(hlLeft);
+
+            const hlRight = new THREE.Mesh(hlGeo, ledMat);
+            hlRight.position.set(-0.6, 0.45, 2.08);
+            hlRight.rotation.y = 0.2;
+            carGroup.add(hlRight);
+
+            // Wheels Assembly
+            const wheelGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.25, 24);
+            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.3 });
+            wheelGeo.rotateZ(Math.PI / 2);
+
+            const wheelPos = [
+                { x: 0.9, y: 0.35, z: 1.2 },  // Front Right
+                { x: -0.9, y: 0.35, z: 1.2 }, // Front Left
+                { x: 0.9, y: 0.35, z: -1.2 }, // Rear Right
+                { x: -0.9, y: 0.35, z: -1.2 } // Rear Left
+            ];
+
+            wheels = [];
+            wheelPos.forEach(pos => {
+                const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+                wheel.position.set(pos.x, pos.y, pos.z);
+                wheel.castShadow = true;
+                carGroup.add(wheel);
+                wheels.push(wheel);
+            });
+
+            scene.add(carGroup);
         }
 
-        // Draw Canvas from Pixel Array
-        function renderCanvas() {
-            for (let y = 0; y < CANVAS_SIZE; y++) {
-                for (let x = 0; x < CANVAS_SIZE; x++) {
-                    ctx.fillStyle = pixelData[y * CANVAS_SIZE + x];
-                    ctx.fillRect(x, y, 1, 1);
-                }
-            }
+        // --- COLOR CUSTOMIZER ---
+        function setCarColor(hexColor, element) {
+            carBodyMaterial.color.setHex(hexColor);
+            document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+            element.classList.add('active');
         }
 
-        // --- CHARGE & TIMER SYSTEM ---
-        function updateCharges() {
-            const now = Date.now();
-            if (charges < MAX_CHARGES) {
-                const elapsed = Math.floor((now - lastChargeTime) / 1000);
-                const recovered = Math.floor(elapsed / COOLDOWN_SECONDS);
-
-                if (recovered > 0) {
-                    charges = Math.min(MAX_CHARGES, charges + recovered);
-                    lastChargeTime = now - ((elapsed % COOLDOWN_SECONDS) * 1000);
-                    saveState();
-                }
-            }
-
-            // Update UI
-            chargeText.innerText = `${charges}/${MAX_CHARGES}`;
-            
-            // Update Pip Indicators
-            const pips = chargePips.children;
-            for (let i = 0; i < MAX_CHARGES; i++) {
-                if (i < charges) {
-                    pips[i].classList.add('active');
-                } else {
-                    pips[i].classList.remove('active');
-                }
-            }
-
-            // Update Countdown Text
-            if (charges >= MAX_CHARGES) {
-                timerText.innerText = 'MAX';
+        // --- PHYSICS & ANIMATION ---
+        function updatePhysics() {
+            // Forward / Reverse
+            if (keys['KeyW'] || keys['ArrowUp']) {
+                if (speed < maxSpeed) speed += acceleration;
+            } else if (keys['KeyS'] || keys['ArrowDown']) {
+                if (speed > -maxSpeed * 0.5) speed -= acceleration;
             } else {
-                const remainingSecs = COOLDOWN_SECONDS - Math.floor(((now - lastChargeTime) / 1000) % COOLDOWN_SECONDS);
-                const mins = Math.floor(remainingSecs / 60);
-                const secs = remainingSecs % 60;
-                timerText.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            }
-        }
-
-        function startCooldownTimer() {
-            updateCharges();
-            setInterval(updateCharges, 1000);
-        }
-
-        function showToast(message) {
-            toast.innerText = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
-        }
-
-        // --- PIXEL PLACEMENT ---
-        function setPixel(x, y, color) {
-            if (x < 0 || x >= CANVAS_SIZE || y < 0 || y >= CANVAS_SIZE) return;
-
-            if (charges <= 0) {
-                showToast('No charges! Wait 1 min to place next pixel.');
-                return;
+                speed *= friction;
             }
 
-            const index = y * CANVAS_SIZE + x;
-            if (pixelData[index] === color) return; // Ignore same color placement
-
-            // Consume 1 charge
-            if (charges === MAX_CHARGES) {
-                lastChargeTime = Date.now();
+            // Handbrake
+            if (keys['Space']) {
+                speed *= 0.85;
             }
-            charges -= 1;
 
-            pixelData[index] = color;
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, 1, 1);
-
-            updateCharges();
-            saveState();
-        }
-
-        // --- MOUSE & TOUCH HANDLERS ---
-        function setupEventListeners() {
-            // Pan & Zoom Window Handlers
-            container.addEventListener('mousedown', (e) => {
-                if (e.button === 1 || activeTool === 'pan' || e.shiftKey) { // Middle click or Pan mode
-                    isDragging = true;
-                    startX = e.clientX - panX;
-                    startY = e.clientY - panY;
-                    container.style.cursor = 'grabbing';
-                } else if (e.button === 0) {
-                    handleCanvasClick(e);
-                }
-            });
-
-            window.addEventListener('mousemove', (e) => {
-                if (isDragging) {
-                    panX = e.clientX - startX;
-                    panY = e.clientY - startY;
-                    updateTransform();
-                }
-            });
-
-            window.addEventListener('mouseup', () => {
-                isDragging = false;
-                container.style.cursor = activeTool === 'pan' ? 'grab' : 'crosshair';
-            });
-
-            // Zoom via Mouse Wheel
-            container.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
-                const newScale = Math.min(Math.max(0.5, scale * zoomFactor), 40);
-
-                // Mouse position relative to viewport
-                const mouseX = e.clientX;
-                const mouseY = e.clientY;
-
-                // Adjust pan to zoom into mouse focal point
-                panX = mouseX - (mouseX - panX) * (newScale / scale);
-                panY = mouseY - (mouseY - panY) * (newScale / scale);
-                scale = newScale;
-
-                updateTransform();
-            }, { passive: false });
-
-            // Tool Switching
-            toolDrawBtn.addEventListener('click', () => setTool('draw'));
-            toolPipetteBtn.addEventListener('click', () => setTool('pipette'));
-            toolPanBtn.addEventListener('click', () => setTool('pan'));
-
-            // Custom Color Input
-            customColorInput.addEventListener('input', (e) => {
-                selectedColor = e.target.value;
-                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-            });
-
-            // Import / Export Controls
-            document.getElementById('btnExportJson').addEventListener('click', exportJSON);
-            document.getElementById('btnImportJson').addEventListener('click', () => importFile.click());
-            importFile.addEventListener('change', importJSON);
-            document.getElementById('btnResetView').addEventListener('click', centerCanvas);
-        }
-
-        function setTool(tool) {
-            activeTool = tool;
-            [toolDrawBtn, toolPipetteBtn, toolPanBtn].forEach(btn => btn.classList.remove('active'));
-
-            if (tool === 'draw') {
-                toolDrawBtn.classList.add('active');
-                container.style.cursor = 'crosshair';
-            } else if (tool === 'pipette') {
-                toolPipetteBtn.classList.add('active');
-                container.style.cursor = 'copy';
-            } else if (tool === 'pan') {
-                toolPanBtn.classList.add('active');
-                container.style.cursor = 'grab';
+            // Steering
+            if (keys['KeyA'] || keys['ArrowLeft']) {
+                steeringAngle = 0.035;
+            } else if (keys['KeyD'] || keys['ArrowRight']) {
+                steeringAngle = -0.035;
+            } else {
+                steeringAngle = 0;
             }
-        }
 
-        function handleCanvasClick(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
+            // Apply Motion
+            if (Math.abs(speed) > 0.001) {
+                carGroup.rotation.y += steeringAngle * (speed > 0 ? 1 : -1);
+                carGroup.translateZ(speed);
 
-            const pixelX = Math.floor(clickX / (rect.width / CANVAS_SIZE));
-            const pixelY = Math.floor(clickY / (rect.height / CANVAS_SIZE));
-
-            if (pixelX >= 0 && pixelX < CANVAS_SIZE && pixelY >= 0 && pixelY < CANVAS_SIZE) {
-                if (activeTool === 'draw') {
-                    setPixel(pixelX, pixelY, selectedColor);
-                } else if (activeTool === 'pipette') {
-                    const pickedColor = pixelData[pixelY * CANVAS_SIZE + pixelX];
-                    selectedColor = pickedColor;
-                    customColorInput.value = pickedColor;
-                    setTool('draw');
-                }
+                // Rotate Wheels
+                wheels.forEach(w => w.rotation.x += speed * 2);
             }
+
+            // Update Speedometer UI
+            const kmh = Math.round(Math.abs(speed) * 220);
+            speedDisplay.innerHTML = `${kmh} <span>KM/H</span>`;
+
+            // Dynamic Camera Tracking (Chase Cam)
+            const relativeCameraOffset = new THREE.Vector3(0, 2.5, -6);
+            const cameraOffset = relativeCameraOffset.applyMatrix4(carGroup.matrixWorld);
+            
+            camera.position.lerp(cameraOffset, 0.1);
+            camera.lookAt(carGroup.position.clone().add(new THREE.Vector3(0, 0.8, 0)));
         }
 
-        // --- LOCAL STORAGE PERSISTENCE ---
-        function saveState() {
-            try {
-                localStorage.setItem('rplace_canvas', JSON.stringify(pixelData));
-                localStorage.setItem('rplace_charges', charges);
-                localStorage.setItem('rplace_last_charge', lastChargeTime);
-            } catch (err) {
-                console.error('Failed to save to localStorage', err);
-            }
+        function animate() {
+            requestAnimationFrame(animate);
+            updatePhysics();
+            renderer.render(scene, camera);
         }
 
-        function loadState() {
-            try {
-                const savedPixels = localStorage.getItem('rplace_canvas');
-                if (savedPixels) {
-                    const parsed = JSON.parse(savedPixels);
-                    if (parsed.length === CANVAS_SIZE * CANVAS_SIZE) {
-                        for (let i = 0; i < parsed.length; i++) pixelData[i] = parsed[i];
-                    }
-                }
-
-                const savedCharges = localStorage.getItem('rplace_charges');
-                if (savedCharges !== null) charges = parseInt(savedCharges, 10);
-
-                const savedLastCharge = localStorage.getItem('rplace_last_charge');
-                if (savedLastCharge !== null) lastChargeTime = parseInt(savedLastCharge, 10);
-            } catch (err) {
-                console.error('Failed to load state', err);
-            }
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // --- JSON IMPORT & EXPORT ---
-        function exportJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
-                width: CANVAS_SIZE,
-                height: CANVAS_SIZE,
-                pixels: pixelData
-            }));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `rplace_canvas_${Date.now()}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function importJSON(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = JSON.parse(evt.target.result);
-                    if (data.pixels && data.pixels.length === CANVAS_SIZE * CANVAS_SIZE) {
-                        for (let i = 0; i < data.pixels.length; i++) {
-                            pixelData[i] = data.pixels[i];
-                        }
-                        renderCanvas();
-                        saveState();
-                        showToast("Canvas JSON successfully imported!");
-                    } else {
-                        showToast("Invalid JSON file structure!");
-                    }
-                } catch (err) {
-                    showToast("Failed to parse JSON file!");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // Start App
         window.onload = init;
     </script>
 </body>
