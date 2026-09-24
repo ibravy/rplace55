@@ -43,6 +43,31 @@
             background-color: #ffffff;
         }
 
+        /* Credits Badge (Top Left) */
+        .credits-badge {
+            position: fixed;
+            top: 16px;
+            left: 20px;
+            background: rgba(24, 24, 27, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 9999px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            font-size: 13px;
+            font-weight: 600;
+            color: #a1a1aa;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .credits-badge span {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
         /* Floating Top Status & Tools Bar */
         .top-bar {
             position: fixed;
@@ -268,6 +293,11 @@
 
     <div id="canvas-container">
         <canvas id="placeCanvas" width="200" height="200"></canvas>
+    </div>
+
+    <!-- Credits Badge -->
+    <div class="credits-badge">
+        Credits by <span>Ahmet</span>
     </div>
 
     <!-- Top Navigation & Charge Info -->
