@@ -68,6 +68,34 @@
             font-weight: 700;
         }
 
+        /* Visitor Counter Badge (Middle Left) */
+        .visitor-badge {
+            position: fixed;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            background: rgba(24, 24, 27, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            font-size: 13px;
+            font-weight: 600;
+            color: #a1a1aa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .visitor-badge span {
+            color: #22c55e;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
         /* Floating Top Status & Tools Bar */
         .top-bar {
             position: fixed;
@@ -300,6 +328,12 @@
         Credits by <span>Ahmet</span>
     </div>
 
+    <!-- Real Visitor Counter Badge -->
+    <div class="visitor-badge">
+        Total Visits
+        <span id="visitCount">...</span>
+    </div>
+
     <!-- Top Navigation & Charge Info -->
     <div class="top-bar">
         <div class="charge-container">
@@ -408,9 +442,28 @@
             renderPalette();
             renderCanvas();
             startCooldownTimer();
+            fetchVisitorCount();
 
             // Event Listeners
             setupEventListeners();
+        }
+
+        // --- REAL VISITOR COUNTER ---
+        function fetchVisitorCount() {
+            // Live Global Counter via CounterAPI Endpoint
+            fetch('https://counterapi.com/api/ibravy.github.io-rplace55/v1/visits/up')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.value) {
+                        document.getElementById('visitCount').innerText = data.value.toLocaleString();
+                    } else {
+                        document.getElementById('visitCount').innerText = '1';
+                    }
+                })
+                .catch(err => {
+                    console.error('Counter API error:', err);
+                    document.getElementById('visitCount').innerText = '1';
+                });
         }
 
         // Center canvas in viewport
